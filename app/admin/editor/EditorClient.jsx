@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 
 export default function EditorClient() {
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState("idle");
+const [password, setPassword] = useState("");
+const [loggedIn, setLoggedIn] = useState(false);
+const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
   const [articles, setArticles] = useState([]);
   const [notes, setNotes] = useState({});
