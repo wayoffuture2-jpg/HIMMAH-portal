@@ -15,7 +15,15 @@ export default function EditorClient() {
       setPassword(savedPassword);
     }
   }, []);
-
+  const safeJson = async (response) => {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { message: text };
+    }
+  };
   const loadArticles = async (pwd) => {
     setStatus("loading");
     setMessage("");
@@ -25,13 +33,14 @@ export default function EditorClient() {
           "x-admin-password": pwd
         }
       });
-      const data = await response.json();
+            const data = await safeJson(response);
       if (!response.ok) {
-        throw new Error(data.message || "Gagal memuat artikel.");
+        throw new Error((data && data.message) || "Gagal memuat artikel.");
       }
-      setArticles(data.articles);
+            const list = (data && data.articles) ? data.articles : [];
+      setArticles(list);
       setNotes(
-        data.articles.reduce((acc, article) => {
+        list.reduce((acc, article) => {
           acc[article.id] = article.editorNote || "";
           return acc;
         }, {})
@@ -67,9 +76,9 @@ export default function EditorClient() {
           editorNote: notes[articleId] || ""
         })
       });
-      const data = await response.json();
+            const data = await safeJson(response);
       if (!response.ok) {
-        throw new Error(data.message || "Gagal memperbarui artikel.");
+        throw new Error((data && data.message) || "Gagal memperbarui artikel.");
       }
       await loadArticles(password);
     } catch (error) {
