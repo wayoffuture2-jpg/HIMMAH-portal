@@ -1,24 +1,28 @@
 import { NextResponse } from "next/server";
 
+export async function GET() {
+  return NextResponse.json({ ok: false, error: "Use POST" }, { status: 405 });
+}
+
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const password = body?.password;
+    const { password } = await req.json();
+    const ok = password && password === process.env.ADMIN_PASSWORD;
 
-    if (!process.env.ADMIN_PASSWORD) {
+    if (!ok) {
       return NextResponse.json(
-        { ok: false, error: "ADMIN_PASSWORD belum diset di Vercel env" },
-        { status: 500 }
+        { ok: false, error: "Password salah" },
+        { status: 401 }
       );
     }
 
-    if (password === process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ ok: true }, { status: 200 });
-    }
-
-    return NextResponse.json({ ok: false, error: "Password salah" }, { status: 401 });
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: "Bad JSON" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "Bad request" },
+      { status: 400 }
+    );
   }
 }
+
 
