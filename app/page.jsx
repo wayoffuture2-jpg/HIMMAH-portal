@@ -5,7 +5,7 @@ import Card from "../components/Card";
 export default function HomePage() {
   return (
     <div>
-      <section className="bg-gradient-to-r from-primary-700 via-primary-600 to-primary-500 text-white">
+      <section className="bg-gradient-to-r from-green-700 via-green-600 to-green-500 text-white">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <p className="text-sm uppercase tracking-[0.4em] text-primary-100">Himmah NWDI Lebak Bulus</p>
           <h2 className="text-4xl md:text-5xl font-bold mt-4">mengaktifkan akal, menumbuhkan jiwa, mengembangkan pengetahuan.</h2>

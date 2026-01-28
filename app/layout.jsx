@@ -22,12 +22,15 @@ export default function RootLayout({ children }) {
       <body>
         <div className="min-h-screen flex flex-col">
           <header className="bg-white shadow-sm">
-            <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+           <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Portal</p>
-                <h1 className="text-2xl font-bold">Himmah NWDI Lebak Bulus</h1>
+                <h1 className="text-lg md:text-2xl font-bold leading-tight">
+  Himmah NWDI<br className="md:hidden" />
+  Lebak Bulus
+</h1>
               </div>
-              <nav className="flex flex-wrap gap-3 text-sm font-medium">
+              <nav className="flex flex-wrap justify-center gap-3 text-sm md:gap-6">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
