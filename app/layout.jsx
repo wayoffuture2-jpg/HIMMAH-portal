@@ -29,8 +29,8 @@ export default function RootLayout({ children }) {
       <body>
         <div className="min-h-screen flex flex-col">
           <header className="bg-white shadow-sm">
-            <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="text-center md:text-left">
+            <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+              <div className="text-left">
                 <p className="text-sm uppercase tracking-[0.2em] text-primary-600">
                   Portal
                 </p>
@@ -43,11 +43,11 @@ export default function RootLayout({ children }) {
 
               {/* Mobile button */}
               <button
-                className="md:hidden rounded-lg border px-3 py-2 text-sm"
-                onClick={() => setOpen(!open)}
-              >
-                Menu
-              </button>
+  className="md:hidden rounded-lg border px-3 py-2 text-sm"
+  onClick={() => setOpen(!open)}
+>
+  Menu
+</button>
 
               {/* Desktop menu */}
               <nav className="hidden md:flex items-center gap-6 text-base">
@@ -85,7 +85,7 @@ export default function RootLayout({ children }) {
           <main className="flex-1">{children}</main>
 
           <footer className="bg-slate-900 text-slate-100">
-            <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-2 text-sm">
+           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
               <p className="font-semibold">Himmah NWDI Lebak Bulus</p>
               <p>
                 Bergerak bersama membangun generasi berilmu, amanah, dan
