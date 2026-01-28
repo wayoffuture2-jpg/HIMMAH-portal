@@ -2,7 +2,7 @@ import "./globals.css";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Himmah NWDI Lebak Bulus",
+  title: "Portal Himpunan Mahasiswa",
   description: "Website resmi Himmah NWDI Lebak Bulus"
 };
 
@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
           <header className="bg-white shadow-sm">
             <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Himmah NWDI</p>
+                <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Portal</p>
                 <h1 className="text-2xl font-bold">Himmah NWDI Lebak Bulus</h1>
               </div>
               <nav className="flex flex-wrap gap-3 text-sm font-medium">
@@ -44,8 +44,8 @@ export default function RootLayout({ children }) {
           <footer className="bg-slate-900 text-slate-100">
             <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-2 text-sm">
               <p className="font-semibold">Himmah NWDI Lebak Bulus</p>
-              <p>Bergerak bersama membangun generasi berilmu, beriman, dan berdaya.</p>
-              <p className="text-slate-400">© 2024 Himmah NWDI Lebak Bulus.</p>
+              <p>Bergerak bersama membangun generasi berilmu, amanah, dan berdampak.</p>
+              <p className="text-slate-400">© 2026 Himmah NWDI Lebak Bulus.</p>
             </div>
           </footer>
         </div>

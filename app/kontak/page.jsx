@@ -11,11 +11,11 @@ export default function KontakPage() {
           </div>
           <div>
             <p className="font-semibold text-slate-900">Email</p>
-            <p className="mt-2">sekretariat@himmah.org</p>
+            <p className="mt-2">sekretariathimmahlb@gmail.com</p>
           </div>
           <div>
             <p className="font-semibold text-slate-900">WhatsApp</p>
-            <p className="mt-2">+62 812 0000 1122</p>
+            <p className="mt-2">+62 859-5166-7568</p>
           </div>
         </div>
       </div>
