@@ -3,12 +3,12 @@ import Section from "../../components/Section";
 const announcements = [
   {
     title: "Rapat Koordinasi Pengurus",
-    date: "15 Juni 2024",
+    date: "15 Juni 2026",
     detail: "Pembahasan program semester kedua dan evaluasi kegiatan sosial."
   },
   {
     title: "Pelatihan Public Speaking",
-    date: "22 Juni 2024",
+    date: "22 Juni 2026",
     detail: "Terbuka untuk kader muda dan relawan, bertempat di aula sekretariat."
   },
   {

@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Portal</p>
                 <h1 className="text-lg md:text-2xl font-bold leading-tight">
-  Himmah NWDI<br className="md:hidden" />
+  Himpunan Mahasiswa<br className="md:hidden" />
   Lebak Bulus
 </h1>
               </div>
