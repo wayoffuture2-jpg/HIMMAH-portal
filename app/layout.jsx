@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
       <body>
         <div className="min-h-screen flex flex-col">
           <header className="bg-white shadow-sm">
-           <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
+           <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Portal</p>
              <h1 className="text-lg md:text-2xl font-bold leading-tight">
@@ -32,7 +32,7 @@ export default function RootLayout({ children }) {
   Mahasiswa 
 </p>
               </div>
-              <nav className="flex flex-wrap justify-center gap-3 text-sm md:gap-6">
+              <nav className="flex flex-wrap justify-center gap-3 text-sm md:gap-6 md:text-base">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
