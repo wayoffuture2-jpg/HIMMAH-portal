@@ -6,7 +6,7 @@ export default function HomePage() {
   return (
     <div>
       <section className="bg-gradient-to-r from-green-700 via-green-600 to-green-500 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-20">
+        <div className="max-w-6xl mx-auto px-4 py-14 md:px-6 md:py-20">
           <p className="text-sm uppercase tracking-[0.4em] text-primary-100">Himmah NWDI Lebak Bulus</p>
           <h2 className="text-4xl md:text-5xl font-bold mt-4">mengaktifkan akal, menumbuhkan jiwa, mengembangkan pengetahuan.</h2>
           <p className="mt-4 max-w-2xl text-primary-100">
