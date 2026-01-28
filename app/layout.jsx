@@ -1,3 +1,4 @@
+"use client";
 import "./globals.css";
 import Link from "next/link";
 
@@ -17,6 +18,7 @@ const navItems = [
 ];
 
 export default function RootLayout({ children }) {
+  const [open, setOpen] = useState(false);
   return (
     <html lang="id">
       <body>
@@ -32,17 +34,44 @@ export default function RootLayout({ children }) {
   Mahasiswa 
 </p>
               </div>
-              <nav className="flex flex-wrap justify-center gap-3 text-sm md:gap-6 md:text-base">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="text-slate-600 hover:text-primary-600 transition"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
+              {/* Mobile button */}
+<button
+  className="md:hidden rounded-lg border px-3 py-2 text-sm"
+  onClick={() => setOpen(!open)}
+>
+  Menu
+</button>
+
+{/* Desktop menu */}
+<nav className="hidden md:flex items-center gap-6 text-base">
+  {navItems.map((item) => (
+    <Link
+      key={item.href}
+      href={item.href}
+      className="hover:text-green-700"
+    >
+      {item.label}
+    </Link>
+  ))}
+</nav>
+
+{/* Mobile dropdown */}
+{open && (
+  <div className="md:hidden w-full border-t pt-3">
+    <nav className="grid grid-cols-2 gap-3 text-sm">
+      {navItems.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className="rounded-lg bg-slate-50 px-3 py-2 text-center"
+          onClick={() => setOpen(false)}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  </div>
+)}
             </div>
           </header>
           <main className="flex-1">{children}</main>
