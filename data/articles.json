@@ -1,0 +1,28 @@
+[
+  {
+    "id": "art-001",
+    "slug": "gerakan-literasi-himmah",
+    "title": "Gerakan Literasi Himmah",
+    "category": "Pendidikan",
+    "content": "Himmah NWDI Lebak Bulus menginisiasi program literasi mingguan bersama relawan dan santri. Kegiatan ini fokus pada pembiasaan membaca, diskusi buku, dan pendampingan belajar bagi remaja.",
+    "authorName": "Tim Media Himmah",
+    "contact": "media@himmah.org",
+    "status": "published",
+    "editorNote": "",
+    "createdAt": "2024-05-10T08:00:00.000Z",
+    "publishedAt": "2024-05-12T08:00:00.000Z"
+  },
+  {
+    "id": "art-002",
+    "slug": "pelatihan-kader-dakwah",
+    "title": "Pelatihan Kader Dakwah",
+    "category": "Kaderisasi",
+    "content": "Pelatihan kader dakwah menjadi agenda rutin untuk membekali anggota dengan materi komunikasi, fiqih dasar, dan penguatan akhlak. Sesi ini menghadirkan pemateri dari alumni dan tokoh lokal.",
+    "authorName": "Halimah",
+    "contact": "0812-3456-7890",
+    "status": "pending",
+    "editorNote": "Perlu lengkapi jadwal kegiatan di paragraf akhir.",
+    "createdAt": "2024-05-20T10:30:00.000Z",
+    "publishedAt": null
+  }
+]
