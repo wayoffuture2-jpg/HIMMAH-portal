@@ -25,9 +25,8 @@ export default function RootLayout({ children }) {
            <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Portal</p>
-                <h1 className="text-lg md:text-2xl font-bold leading-tight">
-  Himpunan Mahasiswa<br className="md:hidden" />
-  Lebak Bulus
+             <h1 className="text-lg md:text-2xl font-bold leading-tight">
+  Himpunan Mahasiswa 
 </h1>
               </div>
               <nav className="flex flex-wrap justify-center gap-3 text-sm md:gap-6">
