@@ -52,14 +52,34 @@ export default function EditorClient() {
     }
   };
 
-  const handleLogin = (event) => {
-    event.preventDefault();
-    if (!password) {
-      return;
+  const handleLogin = async (event) => {
+  event.preventDefault();
+  if (!password) return;
+
+  setStatus("loading");
+  setMessage("");
+
+  try {
+    const res = await fetch("/api/admin/articles/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await safeJson(res); // kamu sudah buat safeJson
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || data?.message || `Login gagal (${res.status})`);
     }
+
+    // ✅ kalau password benar, baru simpan & load artikel
     sessionStorage.setItem("adminPassword", password);
-    loadArticles(password);
-  };
+    await loadArticles(password);
+  } catch (err) {
+    setStatus("error");
+    setMessage(err.message);
+  }
+};
 
   const handleAction = async (articleId, actionStatus) => {
     setStatus("updating");
