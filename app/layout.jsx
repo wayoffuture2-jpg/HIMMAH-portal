@@ -26,8 +26,11 @@ export default function RootLayout({ children }) {
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Portal</p>
              <h1 className="text-lg md:text-2xl font-bold leading-tight">
-  Himpunan Mahasiswa 
+  Himpunan 
 </h1>
+<p className="text-sm text-slate-600">
+  Mahasiswa 
+</p>
               </div>
               <nav className="flex flex-wrap justify-center gap-3 text-sm md:gap-6">
                 {navItems.map((item) => (
