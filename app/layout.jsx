@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
             <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-primary-600">Himmah NWDI</p>
-                <h1 className="text-2xl font-bold">Lombok Timur - Lebak Bulus</h1>
+                <h1 className="text-2xl font-bold">Himmah NWDI Lebak Bulus</h1>
               </div>
               <nav className="flex flex-wrap gap-3 text-sm font-medium">
                 {navItems.map((item) => (

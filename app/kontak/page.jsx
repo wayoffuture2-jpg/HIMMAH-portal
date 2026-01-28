@@ -7,7 +7,7 @@ export default function KontakPage() {
         <div className="grid gap-6 md:grid-cols-3 text-sm text-slate-600">
           <div>
             <p className="font-semibold text-slate-900">Sekretariat</p>
-            <p className="mt-2">Jalan Lebak Bulus Raya, Lombok Timur</p>
+            <p className="mt-2">Jl. Manunggal Jaya No. 30, RT 008 RW 004, Kec. Cilandak, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta</p>
           </div>
           <div>
             <p className="font-semibold text-slate-900">Email</p>
