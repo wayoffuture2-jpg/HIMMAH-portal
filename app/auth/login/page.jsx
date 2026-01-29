@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../../lib/supabaseClient";
 import Section from "../../../components/Section";
+import { supabase } from "../../../lib/supabaseClient";
 
 export default function LoginPublikPage() {
   const router = useRouter();
@@ -17,6 +17,13 @@ export default function LoginPublikPage() {
     setStatus("loading");
     setMessage("");
 
+    if (!email || !password) {
+      setStatus("error");
+      setMessage("Email dan password wajib diisi.");
+      return;
+    }
+
+    // 1) Login
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -24,12 +31,39 @@ export default function LoginPublikPage() {
 
     if (error) {
       setStatus("error");
-      setMessage("Email / password salah.");
+      setMessage(error.message);
       return;
     }
 
+    const userId = data?.user?.id;
+    if (!userId) {
+      setStatus("error");
+      setMessage("Login berhasil, tapi user tidak terbaca.");
+      return;
+    }
+
+    // 2) Ambil role dari profiles
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) {
+      setStatus("error");
+      setMessage("Login berhasil, tapi gagal membaca role.");
+      return;
+    }
+
+    // 3) Redirect sesuai role
+    const role = profile?.role || "publik";
+
     setStatus("ready");
-    router.push("/kirim-artikel"); // arahkan ke submit artikel
+    if (role === "pengurus") {
+      router.push("/pengurus/dashboard");
+    } else {
+      router.push("/kirim-artikel"); // halaman publik setelah login
+    }
   };
 
   return (
@@ -49,6 +83,7 @@ export default function LoginPublikPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
           <button
             disabled={status === "loading"}
             className="w-full rounded-full bg-blue-600 py-2 font-semibold text-white"
@@ -56,14 +91,11 @@ export default function LoginPublikPage() {
             {status === "loading" ? "Memproses..." : "Masuk"}
           </button>
 
-          <div className="text-sm text-slate-600">
-            Belum punya akun?{" "}
-            <a className="text-blue-600 font-semibold" href="/auth/register">
-              Daftar
-            </a>
-          </div>
-
-          {message ? <p className="text-sm text-rose-600">{message}</p> : null}
+          {message ? (
+            <p className={`text-sm ${status === "error" ? "text-rose-600" : "text-emerald-600"}`}>
+              {message}
+            </p>
+          ) : null}
         </form>
       </div>
     </Section>
