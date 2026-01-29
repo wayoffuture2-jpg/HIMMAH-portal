@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Section from "../../../components/Section";
 import { supabase } from "../../../lib/supabaseClient";
+import Section from "../../../components/Section";
 
 export default function LoginPublikPage() {
   const router = useRouter();
@@ -23,10 +23,9 @@ export default function LoginPublikPage() {
       return;
     }
 
-    // 1) Login
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (error) {
@@ -35,35 +34,9 @@ export default function LoginPublikPage() {
       return;
     }
 
-    const userId = data?.user?.id;
-    if (!userId) {
-      setStatus("error");
-      setMessage("Login berhasil, tapi user tidak terbaca.");
-      return;
-    }
-
-    // 2) Ambil role dari profiles
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    if (profileError) {
-      setStatus("error");
-      setMessage("Login berhasil, tapi gagal membaca role.");
-      return;
-    }
-
-    // 3) Redirect sesuai role
-    const role = profile?.role || "publik";
-
+    // ✅ sukses login → langsung ke kirim artikel
     setStatus("ready");
-    if (role === "pengurus") {
-      router.push("/pengurus/dashboard");
-    } else {
-      router.push("/kirim-artikel"); // halaman publik setelah login
-    }
+    router.replace("/kirim-artikel");
   };
 
   return (
