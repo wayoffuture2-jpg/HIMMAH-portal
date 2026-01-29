@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Section from "../../components/Section"; // sesuaikan kalau beda
-import { supabase } from "../../lib/supabaseClient"; // sesuaikan kalau beda
+import Section from "../../../components/Section";
+import { supabase } from "../../../lib/supabaseClient";
 
 export default function LoginPublikPage() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function LoginPublikPage() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -34,15 +34,9 @@ export default function LoginPublikPage() {
       return;
     }
 
-    // Optional: pastikan session ada
-    if (!data?.session) {
-      setStatus("error");
-      setMessage("Login berhasil tapi session tidak terbaca. Coba refresh halaman.");
-      return;
-    }
-
     setStatus("ready");
     router.replace("/kirim-artikel");
+    router.refresh(); // penting di App Router biar state/session kebaca
   };
 
   return (
@@ -50,10 +44,12 @@ export default function LoginPublikPage() {
       <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6">
         <form onSubmit={handleLogin} className="space-y-3">
           <input
+            type="email"
             className="w-full rounded-xl border border-slate-200 px-4 py-2"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
           <input
             type="password"
@@ -61,6 +57,7 @@ export default function LoginPublikPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
           />
 
           <button
