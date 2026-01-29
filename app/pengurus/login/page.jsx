@@ -2,82 +2,90 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabaseClient";
+import Section from "../../../components/Section";
 
-async function safeJson(res) {
-  const text = await res.text();
-  if (!text) return null;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { message: text };
-  }
-}
-
-export default function PengurusLogin() {
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | loading | error
-  const [error, setError] = useState("");
+export default function LoginPengurusPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState("idle");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setStatus("loading");
+    setMessage("");
 
-    if (!password) {
-      setError("Password wajib diisi");
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (authError) {
+      setStatus("error");
+      setMessage("Email / password salah.");
       return;
     }
 
-    setStatus("loading");
+    // cek role di profiles
+    const userId = authData?.user?.id;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, nama")
+      .eq("id", userId)
+      .single();
 
-    try {
-      const res = await fetch("/api/pengurus/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
-
-      const data = await safeJson(res);
-
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || data?.message || `Login gagal (${res.status})`);
-      }
-
-      // ✅ login sukses
-      sessionStorage.setItem("pengurus", "ok");
-      router.push("/pengurus/dashboard");
-    } catch (err) {
+    if (profileError) {
       setStatus("error");
-      setError(err.message);
+      setMessage("Gagal cek role. Coba login ulang.");
+      return;
     }
+
+    if (profile?.role !== "pengurus" && profile?.role !== "admin") {
+      setStatus("error");
+      setMessage("Akun belum diaktifkan sebagai pengurus. Hubungi admin.");
+      return;
+    }
+
+    router.push("/pengurus/dashboard");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-xl border border-slate-200 p-6 bg-white"
-      >
-        <h1 className="text-xl font-bold mb-4">Login Pengurus</h1>
+    <Section title="Login Pengurus" subtitle="Hanya akun role pengurus yang bisa masuk">
+      <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6">
+        <form onSubmit={handleLogin} className="space-y-3">
+          <input
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full border border-slate-200 rounded-lg px-4 py-2 mb-3"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <button
+            disabled={status === "loading"}
+            className="w-full rounded-full bg-emerald-600 py-2 font-semibold text-white"
+          >
+            {status === "loading" ? "Memproses..." : "Masuk"}
+          </button>
 
-        {error ? <p className="text-red-600 text-sm mb-3">{error}</p> : null}
+          <div className="text-sm text-slate-600">
+            Belum punya akun pengurus?{" "}
+            <a className="text-emerald-700 font-semibold" href="/pengurus/register">
+              Daftar
+            </a>
+          </div>
 
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:opacity-60"
-        >
-          {status === "loading" ? "Memeriksa..." : "Masuk"}
-        </button>
-      </form>
-    </div>
+          {message ? <p className="text-sm text-rose-600">{message}</p> : null}
+        </form>
+      </div>
+    </Section>
   );
 }
