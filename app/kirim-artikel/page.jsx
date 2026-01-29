@@ -1,25 +1,46 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Section from "../../components/Section";
 import SubmitForm from "./SubmitForm";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function KirimArtikelPage() {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
 
-  // 🔐 GUARD: wajib login publik
+  // 🔐 GUARD: wajib login publik (Supabase session)
   useEffect(() => {
-    const logged = sessionStorage.getItem("pub_logged");
-    if (!logged) {
-      router.push("/auth/login");
-    }
+    let active = true;
+
+    const check = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      // kalau komponen sudah unmount, stop
+      if (!active) return;
+
+      if (!data?.session) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      setReady(true);
+    };
+
+    check();
+
+    return () => {
+      active = false;
+    };
   }, [router]);
+
+  // Biar tidak kedap-kedip / render sebelum session kebaca
+  if (!ready) return null;
 
   return (
     <Section title="Kirim Artikel" subtitle="Kontributor Publik">
       <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
-        
         {/* FORM SUBMIT ARTIKEL */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
           <SubmitForm />
@@ -32,14 +53,14 @@ export default function KirimArtikelPage() {
           </h3>
 
           <p>
-            Artikel yang dikirim akan melalui proses <strong>kurasi dan
-            peninjauan editor</strong> sebelum dipublikasikan.
+            Artikel yang dikirim akan melalui proses{" "}
+            <strong>kurasi dan peninjauan editor</strong> sebelum dipublikasikan.
           </p>
 
           <ul className="list-disc pl-5 space-y-2">
             <li>
-              Artikel ditulis dengan <strong>bahasa yang santun, argumentatif,
-              dan informatif</strong>.
+              Artikel ditulis dengan{" "}
+              <strong>bahasa yang santun, argumentatif, dan informatif</strong>.
             </li>
             <li>
               Panjang tulisan disarankan antara <strong>600–1500 kata</strong>.
@@ -64,8 +85,8 @@ export default function KirimArtikelPage() {
             </h4>
             <ul className="list-disc pl-5 space-y-1">
               <li>
-                <strong>Filsafat</strong> (pemikiran Islam, filsafat umum,
-                etika, epistemologi, filsafat sosial)
+                <strong>Filsafat</strong> (pemikiran Islam, filsafat umum, etika,
+                epistemologi, filsafat sosial)
               </li>
               <li>
                 <strong>Agama</strong> (keislaman, dakwah, pemikiran keagamaan,
@@ -93,4 +114,3 @@ export default function KirimArtikelPage() {
     </Section>
   );
 }
-
