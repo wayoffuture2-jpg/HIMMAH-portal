@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 
 export default function LaporanPage() {
   const router = useRouter();
-  const [nama, setNama] = useState("");
-  const [deskripsi, setDeskripsi] = useState("");
+  const [judul, setJudul] = useState("");
+  const [isi, setIsi] = useState("");
   const [tanggal, setTanggal] = useState("");
   const [list, setList] = useState([]);
   const [msg, setMsg] = useState("");
@@ -25,11 +25,11 @@ export default function LaporanPage() {
     setLoading(true);
     setMsg("");
     try {
-      const res = await fetch("/api/pengurus/program");
+      const res = await fetch("/api/pengurus/laporan");
       const data = await res.json();
       setList(data.laporan || []);
     } catch {
-      setMsg("Gagal memuat data program.");
+      setMsg("Gagal memuat data laporan.");
     } finally {
       setLoading(false);
     }
@@ -39,16 +39,16 @@ export default function LaporanPage() {
     e.preventDefault();
     setMsg("");
     try {
-      const res = await fetch("api/pengurus/program", {
+      const res = await fetch("/api/pengurus/laporan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ judul, isi, tanggal })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Gagal simpan program.");
+      if (!res.ok) throw new Error(data.message || "Gagal simpan laporan.");
 
-      setNama("");
-      setDeskripsi("");
+      setJudul("");
+      setIsi("");
       setTanggal("");
       fetchList();
     } catch (err) {
@@ -57,10 +57,10 @@ export default function LaporanPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Hapus program ini?")) return;
+    if (!confirm("Hapus laporan ini?")) return;
     setMsg("");
     try {
-      const res = await fetch(`api/pengurus/program/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/pengurus/laporan/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || "Gagal hapus.");
       fetchList();
@@ -71,7 +71,7 @@ export default function LaporanPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Program Kerja</h1>
+      <h1 className="text-2xl font-bold">Laporan Kerja</h1>
 
       <form onSubmit={handleSubmit} className="rounded-xl border bg-white p-4 space-y-3 max-w-2xl">
         <input
@@ -99,9 +99,9 @@ export default function LaporanPage() {
       </form>
 
       <div className="max-w-2xl space-y-3">
-        <h2 className="text-lg font-semibold">Daftar Program</h2>
+        <h2 className="text-lg font-semibold">Daftar Laporan</h2>
         {loading ? <p>Memuat...</p> : null}
-        {!loading && list.length === 0 ? <p className="text-slate-500">Belum ada Program.</p> : null}
+        {!loading && list.length === 0 ? <p className="text-slate-500">Belum ada laporan.</p> : null}
 
         {list.map((item) => (
           <div key={item.id} className="rounded-xl border bg-white p-4">
@@ -124,4 +124,5 @@ export default function LaporanPage() {
     </div>
   );
 }
+
 
