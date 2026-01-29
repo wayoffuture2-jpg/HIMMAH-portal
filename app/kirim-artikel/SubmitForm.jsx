@@ -1,119 +1,145 @@
 "use client";
 
-import { useState } from "react";
-
-const initialState = {
-  authorName: "",
-  contact: "",
-  title: "",
-  category: "",
-  content: ""
-};
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function SubmitForm() {
-  const [formData, setFormData] = useState(initialState);
-  const [status, setStatus] = useState("idle");
-  const [message, setMessage] = useState("");
+  const [nama, setNama] = useState("");
+  const [kontak, setKontak] = useState("");
+  const [judul, setJudul] = useState("");
+  const [kategori, setKategori] = useState("");
+  const [isi, setIsi] = useState("");
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [ok, setOk] = useState(false);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setStatus("loading");
-    setMessage("");
+  // auto isi kontak dari user login (email)
+  useEffect(() => {
+    const init = async () => {
+      const { data } = await supabase.auth.getUser();
+      const email = data?.user?.email || "";
+      if (email && !kontak) setKontak(email);
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  const submit = async (e) => {
+    e.preventDefault();
+    setMsg("");
+    setOk(false);
+
+    if (!nama || !kontak || !judul || !kategori || !isi) {
+      setMsg("Semua field wajib diisi.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await fetch("/api/articles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Gagal mengirim artikel.");
+      // pastikan user login
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+      if (!user) {
+        setMsg("Kamu belum login. Silakan login dulu.");
+        return;
       }
 
-      setStatus("success");
-      setMessage("Artikel berhasil dikirim dan menunggu review editor.");
-      setFormData(initialState);
-    } catch (error) {
-      setStatus("error");
-      setMessage(error.message);
+      // ⬇️ Sesuaikan nama kolom dengan table articles kamu
+      // Umumnya: nama, kontak, judul, kategori, isi, status
+      const { error } = await supabase.from("articles").insert([
+        {
+          nama,
+          kontak,
+          judul,
+          kategori,
+          isi,
+          status: "pending",
+          user_id: user.id, // kalau kolom user_id ada (kalau tidak ada, hapus baris ini)
+        },
+      ]);
+
+      if (error) throw error;
+
+      setOk(true);
+      setMsg("Artikel berhasil dikirim. Status: pending (menunggu review).");
+
+      // reset form
+      setJudul("");
+      setKategori("");
+      setIsi("");
+    } catch (err) {
+      setMsg(err?.message || "Gagal mengirim artikel.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-2 text-sm">
-          Nama
+        <div>
+          <label className="text-sm text-slate-600">Nama</label>
           <input
-            className="rounded-xl border border-slate-200 px-4 py-2"
-            name="authorName"
-            value={formData.authorName}
-            onChange={handleChange}
-            required
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+            placeholder="Nama lengkap"
           />
-        </label>
-        <label className="flex flex-col gap-2 text-sm">
-          Kontak (WA/Email)
+        </div>
+
+        <div>
+          <label className="text-sm text-slate-600">Kontak (WA/Email)</label>
           <input
-            className="rounded-xl border border-slate-200 px-4 py-2"
-            name="contact"
-            value={formData.contact}
-            onChange={handleChange}
-            required
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
+            value={kontak}
+            onChange={(e) => setKontak(e.target.value)}
+            placeholder="08xx / email"
           />
-        </label>
+        </div>
       </div>
-      <label className="flex flex-col gap-2 text-sm">
-        Judul Artikel
+
+      <div>
+        <label className="text-sm text-slate-600">Judul Artikel</label>
         <input
-          className="rounded-xl border border-slate-200 px-4 py-2"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          required
+          className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
+          value={judul}
+          onChange={(e) => setJudul(e.target.value)}
+          placeholder="Judul artikel"
         />
-      </label>
-      <label className="flex flex-col gap-2 text-sm">
-        Kategori
+      </div>
+
+      <div>
+        <label className="text-sm text-slate-600">Kategori</label>
         <input
-          className="rounded-xl border border-slate-200 px-4 py-2"
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-          required
+          className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
+          value={kategori}
+          onChange={(e) => setKategori(e.target.value)}
+          placeholder="Filsafat / Agama / Sains / Politik"
         />
-      </label>
-      <label className="flex flex-col gap-2 text-sm">
-        Isi Artikel
+      </div>
+
+      <div>
+        <label className="text-sm text-slate-600">Isi Artikel</label>
         <textarea
-          className="min-h-[180px] rounded-xl border border-slate-200 px-4 py-2"
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          required
+          className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
+          rows={10}
+          value={isi}
+          onChange={(e) => setIsi(e.target.value)}
+          placeholder="Tulis artikel di sini..."
         />
-      </label>
+      </div>
+
       <button
-        type="submit"
-        disabled={status === "loading"}
-        className="rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
+        disabled={loading}
+        className="rounded-full bg-blue-600 px-6 py-2 font-semibold text-white"
       >
-        {status === "loading" ? "Mengirim..." : "Kirim Artikel"}
+        {loading ? "Mengirim..." : "Kirim Artikel"}
       </button>
-      {message ? (
-        <p
-          className={`text-sm ${
-            status === "success" ? "text-emerald-600" : "text-rose-600"
-          }`}
-        >
-          {message}
+
+      {msg ? (
+        <p className={`text-sm ${ok ? "text-emerald-600" : "text-rose-600"}`}>
+          {msg}
         </p>
       ) : null}
     </form>
