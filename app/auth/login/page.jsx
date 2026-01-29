@@ -23,10 +23,7 @@ export default function LoginPublikPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setStatus("error");
@@ -36,7 +33,31 @@ export default function LoginPublikPage() {
 
     setStatus("ready");
     router.replace("/kirim-artikel");
-    router.refresh(); // penting di App Router biar state/session kebaca
+    router.refresh();
+  };
+
+  const handleForgotPassword = async () => {
+    setStatus("loading");
+    setMessage("");
+
+    if (!email) {
+      setStatus("error");
+      setMessage("Isi email dulu, lalu klik Lupa Password.");
+      return;
+    }
+
+    const redirectTo = `${window.location.origin}/auth/reset`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+    if (error) {
+      setStatus("error");
+      setMessage(error.message);
+      return;
+    }
+
+    setStatus("ready");
+    setMessage("Link reset password sudah dikirim ke email. Cek Inbox/Spam.");
   };
 
   return (
@@ -65,6 +86,15 @@ export default function LoginPublikPage() {
             className="w-full rounded-full bg-blue-600 py-2 font-semibold text-white"
           >
             {status === "loading" ? "Memproses..." : "Masuk"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            disabled={status === "loading"}
+            className="w-full rounded-full border border-slate-200 py-2 font-semibold text-slate-700"
+          >
+            Lupa Password
           </button>
 
           {message ? (
