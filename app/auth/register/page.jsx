@@ -1,41 +1,84 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabaseClient";
+import Section from "../../../components/Section";
 
-export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+export default function RegisterPublikPage() {
   const router = useRouter();
+  const [nama, setNama] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState("idle");
+  const [message, setMessage] = useState("");
 
-  const submit = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    if (!name || !password) return setMsg("Isi nama & password.");
-    // MVP: simpan akun publik di localStorage
-    localStorage.setItem("pub_name", name);
-    localStorage.setItem("pub_password", password);
-    setMsg("Berhasil daftar. Silakan login.");
-    setTimeout(() => router.push("/auth/login"), 700);
+    setStatus("loading");
+    setMessage("");
+
+    if (!nama || !email || !password) {
+      setStatus("error");
+      setMessage("Nama, email, dan password wajib diisi.");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nama } // masuk ke raw_user_meta_data → dipakai trigger profiles
+      }
+    });
+
+    if (error) {
+      setStatus("error");
+      setMessage(error.message);
+      return;
+    }
+
+    setStatus("ready");
+    setMessage("Daftar berhasil. Silakan login.");
+    router.push("/auth/login");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-xl border p-6 bg-white">
-        <h1 className="text-xl font-bold mb-4">Daftar Publik</h1>
-        <input className="w-full border rounded-lg px-4 py-2 mb-3"
-          placeholder="Nama"
-          value={name}
-          onChange={(e)=>setName(e.target.value)}
-        />
-        <input className="w-full border rounded-lg px-4 py-2 mb-3"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e)=>setPassword(e.target.value)}
-        />
-        {msg && <p className="text-sm text-slate-600 mb-3">{msg}</p>}
-        <button className="w-full bg-blue-600 text-white py-2 rounded-lg">Daftar</button>
-      </form>
-    </div>
+    <Section title="Daftar Publik" subtitle="Buat akun untuk mengirim artikel">
+      <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6">
+        <form onSubmit={handleRegister} className="space-y-3">
+          <input
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
+            placeholder="Nama"
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+          />
+          <input
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            disabled={status === "loading"}
+            className="w-full rounded-full bg-blue-600 py-2 font-semibold text-white"
+          >
+            {status === "loading" ? "Memproses..." : "Daftar"}
+          </button>
+          {message ? (
+            <p className={`text-sm ${status === "error" ? "text-rose-600" : "text-emerald-600"}`}>
+              {message}
+            </p>
+          ) : null}
+        </form>
+      </div>
+    </Section>
   );
 }
