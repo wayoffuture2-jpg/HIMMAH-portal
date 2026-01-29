@@ -1,51 +1,39 @@
 import { NextResponse } from "next/server";
 
-function isAuthorized(req) {
-  const headerPwd = req.headers.get("x-pengurus-password");
-  const envPwd = process.env.PENGURUS_PASSWORD; // server-only
-  return Boolean(envPwd && headerPwd && headerPwd === envPwd);
-}
+let laporanDB = []; // sementara: memory (nanti bisa diganti database)
 
-// sementara: data dummy biar endpoint bisa dites dulu
-let laporanStore = [];
-
-export async function GET(req) {
-  if (!isAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
-
-  return NextResponse.json({ ok: true, laporan: laporanStore }, { status: 200 });
+export async function GET() {
+  return NextResponse.json({ ok: true, laporan: laporanDB }, { status: 200 });
 }
 
 export async function POST(req) {
-  if (!isAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
     const body = await req.json();
-    const title = (body?.title || "").trim();
-    const content = (body?.content || "").trim();
+    const { judul, isi } = body || {};
 
-    if (!title || !content) {
+    if (!judul || !isi) {
       return NextResponse.json(
-        { ok: false, error: "title dan content wajib diisi" },
+        { ok: false, message: "Judul dan isi wajib diisi." },
         { status: 400 }
       );
     }
 
     const newItem = {
-      id: String(Date.now()),
-      title,
-      content,
-      createdAt: new Date().toISOString(),
+      id: Date.now(),
+      judul,
+      isi,
+      createdAt: new Date().toISOString()
     };
 
-    laporanStore.unshift(newItem);
+    laporanDB.unshift(newItem);
 
-    return NextResponse.json({ ok: true, item: newItem }, { status: 201 });
+    return NextResponse.json({ ok: true, data: newItem }, { status: 201 });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: "Bad request" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, message: "Bad request" },
+      { status: 400 }
+    );
   }
 }
+
 
