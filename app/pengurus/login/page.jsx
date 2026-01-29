@@ -17,16 +17,7 @@ export default function LoginPengurusPage() {
     setStatus("loading");
     setMessage("");
 
-    if (!email || !password) {
-      setStatus("error");
-      setMessage("Email dan password wajib diisi.");
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setStatus("error");
@@ -35,12 +26,8 @@ export default function LoginPengurusPage() {
     }
 
     const userId = data?.user?.id;
-    if (!userId) {
-      setStatus("error");
-      setMessage("Login berhasil, tapi user tidak terbaca.");
-      return;
-    }
 
+    // cek role dari profiles
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
@@ -55,19 +42,21 @@ export default function LoginPengurusPage() {
 
     if (profile?.role !== "pengurus") {
       setStatus("error");
-      setMessage("Akun kamu belum diaktifkan sebagai pengurus.");
+      setMessage("Akun kamu belum diaktifkan sebagai pengurus. Hubungi admin.");
       return;
     }
 
     setStatus("ready");
-    router.push("/pengurus/dashboard");
+    router.replace("/pengurus/dashboard");
+    router.refresh();
   };
 
   return (
-    <Section title="Login Pengurus" subtitle="Khusus akun ber-role pengurus">
+    <Section title="Login Pengurus" subtitle="Khusus akun yang sudah diaktifkan">
       <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6">
         <form onSubmit={handleLogin} className="space-y-3">
           <input
+            type="email"
             className="w-full rounded-xl border border-slate-200 px-4 py-2"
             placeholder="Email"
             value={email}
@@ -87,6 +76,10 @@ export default function LoginPengurusPage() {
           >
             {status === "loading" ? "Memproses..." : "Masuk Pengurus"}
           </button>
+
+          <a className="block text-sm text-emerald-700 underline" href="/pengurus/register">
+            Belum punya akun pengurus? Daftar di sini
+          </a>
 
           {message ? (
             <p className={`text-sm ${status === "error" ? "text-rose-600" : "text-emerald-600"}`}>
