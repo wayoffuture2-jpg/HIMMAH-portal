@@ -1,61 +1,51 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
 
-const filePath = path.join(process.cwd(), "data", "laporan.json");
+function isAuthorized(req) {
+  const headerPwd = req.headers.get("x-pengurus-password");
+  const envPwd = process.env.PENGURUS_PASSWORD; // server-only
+  return Boolean(envPwd && headerPwd && headerPwd === envPwd);
+}
 
-async function readData() {
-  try {
-    const raw = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(raw || "[]");
-  } catch {
-    return [];
+// sementara: data dummy biar endpoint bisa dites dulu
+let laporanStore = [];
+
+export async function GET(req) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
+
+  return NextResponse.json({ ok: true, laporan: laporanStore }, { status: 200 });
 }
 
-async function writeData(data) {
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
-}
-
-// GET /api/pengurus/laporan  -> list laporan
-export async function GET() {
-  const data = await readData();
-  return NextResponse.json({ ok: true, laporan: data });
-}
-
-// POST /api/pengurus/laporan -> tambah laporan
 export async function POST(req) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
-    const { judul, isi, tanggal } = body;
+    const title = (body?.title || "").trim();
+    const content = (body?.content || "").trim();
 
-    if (!judul || !isi) {
+    if (!title || !content) {
       return NextResponse.json(
-        { ok: false, message: "Judul dan isi wajib diisi." },
+        { ok: false, error: "title dan content wajib diisi" },
         { status: 400 }
       );
     }
 
-    const data = await readData();
-    const now = new Date().toISOString();
-
     const newItem = {
-      id: crypto.randomUUID(),
-      judul,
-      isi,
-      tanggal: tanggal || now.slice(0, 10),
-      createdAt: now,
-      updatedAt: now
+      id: String(Date.now()),
+      title,
+      content,
+      createdAt: new Date().toISOString(),
     };
 
-    data.unshift(newItem);
-    await writeData(data);
+    laporanStore.unshift(newItem);
 
-    return NextResponse.json({ ok: true, laporan: newItem });
-  } catch {
-    return NextResponse.json(
-      { ok: false, message: "Bad request" },
-      { status: 400 }
-    );
+    return NextResponse.json({ ok: true, item: newItem }, { status: 201 });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: "Bad request" }, { status: 400 });
   }
 }
+
