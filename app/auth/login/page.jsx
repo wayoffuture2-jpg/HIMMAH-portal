@@ -1,49 +1,71 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabaseClient";
+import Section from "../../../components/Section";
 
-export default function LoginPage() {
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [err, setErr] = useState("");
+export default function LoginPublikPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState("idle");
+  const [message, setMessage] = useState("");
 
-  const submit = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setErr("");
+    setStatus("loading");
+    setMessage("");
 
-    const savedName = localStorage.getItem("pub_name");
-    const savedPass = localStorage.getItem("pub_password");
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    if (name === savedName && password === savedPass) {
-      sessionStorage.setItem("pub_logged", "ok");
-      router.push("/kirim-artikel");
-    } else {
-      setErr("Nama atau password salah.");
+    if (error) {
+      setStatus("error");
+      setMessage("Email / password salah.");
+      return;
     }
+
+    setStatus("ready");
+    router.push("/kirim-artikel"); // arahkan ke submit artikel
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-xl border p-6 bg-white">
-        <h1 className="text-xl font-bold mb-4">Login Publik</h1>
+    <Section title="Login Publik" subtitle="Masuk untuk mengirim artikel">
+      <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6">
+        <form onSubmit={handleLogin} className="space-y-3">
+          <input
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            disabled={status === "loading"}
+            className="w-full rounded-full bg-blue-600 py-2 font-semibold text-white"
+          >
+            {status === "loading" ? "Memproses..." : "Masuk"}
+          </button>
 
-        <input className="w-full border rounded-lg px-4 py-2 mb-3"
-          placeholder="Nama"
-          value={name}
-          onChange={(e)=>setName(e.target.value)}
-        />
-        <input className="w-full border rounded-lg px-4 py-2 mb-3"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e)=>setPassword(e.target.value)}
-        />
+          <div className="text-sm text-slate-600">
+            Belum punya akun?{" "}
+            <a className="text-blue-600 font-semibold" href="/auth/register">
+              Daftar
+            </a>
+          </div>
 
-        {err && <p className="text-red-600 text-sm mb-3">{err}</p>}
-
-        <button className="w-full bg-blue-600 text-white py-2 rounded-lg">Masuk</button>
-      </form>
-    </div>
+          {message ? <p className="text-sm text-rose-600">{message}</p> : null}
+        </form>
+      </div>
+    </Section>
   );
 }
