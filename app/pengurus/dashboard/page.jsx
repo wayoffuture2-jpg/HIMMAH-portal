@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabaseClient";
 
 export default function PengurusDashboard() {
   const router = useRouter();
+
+  // ✅ auth guard state
+  const [ready, setReady] = useState(false);
+
+  // MVP password utk API (sementara)
   const [pwd, setPwd] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [list, setList] = useState([]);
@@ -13,14 +20,47 @@ export default function PengurusDashboard() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
+  // ✅ GUARD: harus login + role pengurus
   useEffect(() => {
-    // proteksi sederhana: harus login dulu
-    const ok = sessionStorage.getItem("pengurus");
-    if (!ok) router.push("/pengurus/login");
+    let active = true;
 
-    // ambil password tersimpan (kalau kamu simpan)
-    const saved = sessionStorage.getItem("pengurusPassword");
-    if (saved) setPwd(saved);
+    const check = async () => {
+      // 1) cek session
+      const { data: sess } = await supabase.auth.getSession();
+      if (!active) return;
+
+      if (!sess?.session) {
+        router.replace("/pengurus/login");
+        return;
+      }
+
+      // 2) cek role di profiles
+      const userId = sess.session.user.id;
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (!active) return;
+
+      if (profileError || profile?.role !== "pengurus") {
+        router.replace("/pengurus/login");
+        return;
+      }
+
+      // 3) ambil password API tersimpan (kalau kamu masih pakai MVP password header)
+      const saved = sessionStorage.getItem("pengurusPassword");
+      if (saved) setPwd(saved);
+
+      setReady(true);
+    };
+
+    check();
+
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   const load = async (password) => {
@@ -31,7 +71,10 @@ export default function PengurusDashboard() {
         headers: { "x-pengurus-password": password },
       });
       const data = await res.json();
-      if (!res.ok || !data?.ok) throw new Error(data?.error || "Gagal load laporan");
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.message || data?.error || "Gagal load laporan");
+      }
 
       setList(data.laporan || []);
     } catch (e) {
@@ -53,8 +96,12 @@ export default function PengurusDashboard() {
         },
         body: JSON.stringify({ title, content }),
       });
+
       const data = await res.json();
-      if (!res.ok || !data?.ok) throw new Error(data?.error || "Gagal submit laporan");
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.message || data?.error || "Gagal submit laporan");
+      }
 
       setTitle("");
       setContent("");
@@ -66,16 +113,38 @@ export default function PengurusDashboard() {
     }
   };
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    sessionStorage.removeItem("pengurusPassword");
+    router.replace("/pengurus/login");
+    router.refresh();
+  };
+
+  // ✅ biar tidak kedap-kedip sebelum guard selesai
+  if (!ready) return null;
+
   return (
     <div className="mx-auto max-w-3xl p-6 space-y-6">
       <div className="rounded-2xl border bg-white p-6">
-        <h1 className="text-2xl font-bold">Dashboard Pengurus</h1>
-        <p className="text-sm text-slate-600 mt-1">Buat laporan kerja/program.</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Dashboard Pengurus</h1>
+            <p className="text-sm text-slate-600 mt-1">Buat laporan kerja/program.</p>
+          </div>
 
+          <button
+            onClick={logout}
+            className="rounded-xl border px-4 py-2 text-sm"
+          >
+            Logout
+          </button>
+        </div>
+
+        {/* Password API sementara (MVP) */}
         <div className="mt-4 flex gap-2">
           <input
             className="flex-1 rounded-xl border px-4 py-2"
-            placeholder="Password pengurus (untuk akses API)"
+            placeholder="Password pengurus (untuk akses API) - sementara"
             type="password"
             value={pwd}
             onChange={(e) => setPwd(e.target.value)}
@@ -139,6 +208,7 @@ export default function PengurusDashboard() {
               </div>
             </div>
           ))}
+
           {!loading && list.length === 0 ? (
             <p className="text-sm text-slate-500">Belum ada laporan.</p>
           ) : null}
@@ -147,4 +217,3 @@ export default function PengurusDashboard() {
     </div>
   );
 }
-
