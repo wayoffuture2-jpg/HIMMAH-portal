@@ -1,34 +1,84 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-/**
- * CATATAN:
- * - Ini masih pakai memory (laporanDB)
- * - Data akan hilang kalau server restart / redeploy
- * - Nanti bisa diganti database (Supabase / Prisma / dll)
- */
 let laporanDB = [];
 
-/**
- * GET
- * Ambil semua laporan
- */
-export async function GET() {
-  return NextResponse.json(
-    { ok: true, laporan: laporanDB },
-    { status: 200 }
-  );
+// Supabase admin client (server only)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+async function requirePengurus(req) {
+  const auth = req.headers.get("authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+
+  if (!token) {
+    return { ok: false, status: 401, message: "Unauthorized: token tidak ada" };
+  }
+
+  // 1) validasi token => dapat user
+  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+  if (userError || !userData?.user) {
+    return { ok: false, status: 401, message: "Unauthorized: token tidak valid" };
+  }
+
+  const userId = userData.user.id;
+
+  // 2) cek role dari profiles
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (profileError) {
+    return { ok: false, status: 500, message: "Gagal membaca role user" };
+  }
+
+  if (profile?.role !== "pengurus") {
+    return { ok: false, status: 403, message: "Forbidden: bukan pengurus" };
+  }
+
+  return { ok: true, userId };
 }
 
 /**
- * POST
- * Simpan laporan baru (judul, isi, fileUrl opsional)
+ * GET - hanya pengurus
+ */
+export async function GET(req) {
+  const authz = await requirePengurus(req);
+  if (!authz.ok) {
+    return NextResponse.json(
+      { ok: false, message: authz.message },
+      { status: authz.status }
+    );
+  }
+
+  return NextResponse.json({ ok: true, laporan: laporanDB }, { status: 200 });
+}
+
+/**
+ * POST - hanya pengurus
+ * menerima: judul/isi atau title/content
  */
 export async function POST(req) {
+  const authz = await requirePengurus(req);
+  if (!authz.ok) {
+    return NextResponse.json(
+      { ok: false, message: authz.message },
+      { status: authz.status }
+    );
+  }
+
   try {
     const body = await req.json();
-    const { judul, isi, fileUrl } = body || {};
 
-    // validasi wajib
+    const judul = body?.judul ?? body?.title;
+    const isi = body?.isi ?? body?.content;
+    const fileUrl = body?.fileUrl ?? null;
+
     if (!judul || !isi) {
       return NextResponse.json(
         { ok: false, message: "Judul dan isi wajib diisi." },
@@ -40,17 +90,14 @@ export async function POST(req) {
       id: Date.now(),
       judul,
       isi,
-      fileUrl: fileUrl || null, // ⬅️ tambahan penting
-      createdAt: new Date().toISOString()
+      fileUrl,
+      createdAt: new Date().toISOString(),
+      createdBy: authz.userId
     };
 
-    // simpan di awal array (paling baru di atas)
     laporanDB.unshift(newItem);
 
-    return NextResponse.json(
-      { ok: true, data: newItem },
-      { status: 201 }
-    );
+    return NextResponse.json({ ok: true, data: newItem }, { status: 201 });
   } catch (e) {
     return NextResponse.json(
       { ok: false, message: "Bad request" },
