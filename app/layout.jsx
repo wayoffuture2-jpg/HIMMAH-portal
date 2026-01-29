@@ -11,7 +11,9 @@ const navItems = [
   { href: "/program", label: "Program" },
   { href: "/artikel", label: "Artikel" },
   { href: "/kirim-artikel", label: "Kirim Artikel" },
-  { href: "/kontak", label: "Kontak" },
+  { href: "/pengurus/login", label: "Pengurus Login" },
+  { href: "/pengurus/register", label: "Daftar Pengurus" },
+  { href: "/kontak", label: "Kontak" }
 ];
 
 export default function RootLayout({ children }) {
