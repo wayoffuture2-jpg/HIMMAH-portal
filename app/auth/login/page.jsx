@@ -9,7 +9,8 @@ export default function LoginPublikPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState("idle");
+
+  const [status, setStatus] = useState("idle"); // idle | loading | ready | error
   const [message, setMessage] = useState("");
 
   const handleLogin = async (e) => {
@@ -23,9 +24,31 @@ export default function LoginPublikPage() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      setStatus("error");
+      setMessage(error.message);
+      return;
+    }
+
+    setStatus("ready");
+    router.replace("/kirim-artikel");
+  };
+
+  const handleForgotPassword = async () => {
+    setStatus("loading");
+    setMessage("");
+
+    if (!email) {
+      setStatus("error");
+      setMessage("Isi email dulu, lalu klik Lupa password.");
+      return;
+    }
+
+    // PENTING: URL ini harus ada di Supabase Auth settings (redirect allowlist)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset`,
     });
 
     if (error) {
@@ -34,9 +57,8 @@ export default function LoginPublikPage() {
       return;
     }
 
-    // ✅ sukses login → langsung ke kirim artikel
     setStatus("ready");
-    router.replace("/kirim-artikel");
+    setMessage("Link reset password sudah dikirim ke email. Cek Inbox/Spam.");
   };
 
   return (
@@ -49,6 +71,7 @@ export default function LoginPublikPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+
           <input
             type="password"
             className="w-full rounded-xl border border-slate-200 px-4 py-2"
@@ -62,6 +85,15 @@ export default function LoginPublikPage() {
             className="w-full rounded-full bg-blue-600 py-2 font-semibold text-white"
           >
             {status === "loading" ? "Memproses..." : "Masuk"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            disabled={status === "loading"}
+            className="w-full rounded-full border border-slate-200 py-2 font-semibold text-slate-700"
+          >
+            Lupa password
           </button>
 
           {message ? (
