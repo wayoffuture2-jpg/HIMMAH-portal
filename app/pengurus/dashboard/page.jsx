@@ -7,12 +7,7 @@ import { supabase } from "../../../lib/supabaseClient";
 export default function PengurusDashboard() {
   const router = useRouter();
 
-  // ✅ auth guard state
   const [ready, setReady] = useState(false);
-
-  // MVP password utk API (sementara)
-  const [pwd, setPwd] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [list, setList] = useState([]);
@@ -20,11 +15,19 @@ export default function PengurusDashboard() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
+  // ambil token login supabase
+  const getToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token || null;
+  };
+
   // ✅ GUARD: harus login + role pengurus
   useEffect(() => {
     let active = true;
 
     const check = async () => {
+      setMsg("");
+
       // 1) cek session
       const { data: sess } = await supabase.auth.getSession();
       if (!active) return;
@@ -44,16 +47,22 @@ export default function PengurusDashboard() {
 
       if (!active) return;
 
-      if (profileError || profile?.role !== "pengurus") {
+      if (profileError) {
         router.replace("/pengurus/login");
         return;
       }
 
-      // 3) ambil password API tersimpan (kalau kamu masih pakai MVP password header)
-      const saved = sessionStorage.getItem("pengurusPassword");
-      if (saved) setPwd(saved);
+      if (profile?.role !== "pengurus") {
+        router.replace("/pengurus/login");
+        return;
+      }
 
       setReady(true);
+
+      // 3) setelah lolos guard, auto-load laporan
+      setTimeout(() => {
+        if (active) load();
+      }, 0);
     };
 
     check();
@@ -63,15 +72,18 @@ export default function PengurusDashboard() {
     };
   }, [router]);
 
-  const load = async (password) => {
+  const load = async () => {
     setLoading(true);
     setMsg("");
     try {
-      const res = await fetch("/api/pengurus/laporan", {
-        headers: { "x-pengurus-password": password },
-      });
-      const data = await res.json();
+      const token = await getToken();
+      if (!token) throw new Error("Session hilang. Silakan login ulang.");
 
+      const res = await fetch("/api/pengurus/laporan", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
       if (!res.ok || !data?.ok) {
         throw new Error(data?.message || data?.error || "Gagal load laporan");
       }
@@ -88,24 +100,31 @@ export default function PengurusDashboard() {
     setLoading(true);
     setMsg("");
     try {
+      if (!title || !content) {
+        throw new Error("Judul dan isi wajib diisi.");
+      }
+
+      const token = await getToken();
+      if (!token) throw new Error("Session hilang. Silakan login ulang.");
+
       const res = await fetch("/api/pengurus/laporan", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-pengurus-password": pwd,
+          Authorization: `Bearer ${token}`,
         },
+        // API sudah support title/content ATAU judul/isi
         body: JSON.stringify({ title, content }),
       });
 
       const data = await res.json();
-
       if (!res.ok || !data?.ok) {
         throw new Error(data?.message || data?.error || "Gagal submit laporan");
       }
 
       setTitle("");
       setContent("");
-      await load(pwd);
+      await load();
     } catch (e) {
       setMsg(e.message);
     } finally {
@@ -115,12 +134,10 @@ export default function PengurusDashboard() {
 
   const logout = async () => {
     await supabase.auth.signOut();
-    sessionStorage.removeItem("pengurusPassword");
     router.replace("/pengurus/login");
     router.refresh();
   };
 
-  // ✅ biar tidak kedap-kedip sebelum guard selesai
   if (!ready) return null;
 
   return (
@@ -132,32 +149,18 @@ export default function PengurusDashboard() {
             <p className="text-sm text-slate-600 mt-1">Buat laporan kerja/program.</p>
           </div>
 
-          <button
-            onClick={logout}
-            className="rounded-xl border px-4 py-2 text-sm"
-          >
-            Logout
-          </button>
-        </div>
-
-        {/* Password API sementara (MVP) */}
-        <div className="mt-4 flex gap-2">
-          <input
-            className="flex-1 rounded-xl border px-4 py-2"
-            placeholder="Password pengurus (untuk akses API) - sementara"
-            type="password"
-            value={pwd}
-            onChange={(e) => setPwd(e.target.value)}
-          />
-          <button
-            className="rounded-xl bg-slate-900 text-white px-4 py-2"
-            onClick={() => {
-              sessionStorage.setItem("pengurusPassword", pwd);
-              load(pwd);
-            }}
-          >
-            Load
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={load}
+              disabled={loading}
+              className="rounded-xl bg-slate-900 text-white px-4 py-2 text-sm"
+            >
+              {loading ? "Loading..." : "Refresh"}
+            </button>
+            <button onClick={logout} className="rounded-xl border px-4 py-2 text-sm">
+              Logout
+            </button>
+          </div>
         </div>
 
         {msg ? <p className="mt-3 text-sm text-rose-600">{msg}</p> : null}
@@ -175,7 +178,7 @@ export default function PengurusDashboard() {
 
         <textarea
           className="w-full rounded-xl border px-4 py-2"
-          rows={5}
+          rows={6}
           placeholder="Isi laporan..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -188,6 +191,10 @@ export default function PengurusDashboard() {
         >
           {loading ? "Memproses..." : "Kirim Laporan"}
         </button>
+
+        <p className="text-xs text-slate-500">
+          Catatan: data laporan masih tersimpan sementara (memory). Kalau server redeploy, datanya bisa hilang.
+        </p>
       </div>
 
       <div className="rounded-2xl border bg-white p-6">
@@ -202,10 +209,20 @@ export default function PengurusDashboard() {
           {list.map((x) => (
             <div key={x.id} className="rounded-xl border bg-slate-50 p-4">
               <div className="text-sm text-slate-500">{x.createdAt}</div>
-              <div className="font-semibold">{x.title}</div>
+              <div className="font-semibold">{x.judul ?? x.title}</div>
               <div className="text-sm text-slate-700 whitespace-pre-line mt-2">
-                {x.content}
+                {x.isi ?? x.content}
               </div>
+              {x.fileUrl ? (
+                <a
+                  href={x.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block mt-3 text-sm text-emerald-700 underline"
+                >
+                  Lihat file laporan
+                </a>
+              ) : null}
             </div>
           ))}
 
