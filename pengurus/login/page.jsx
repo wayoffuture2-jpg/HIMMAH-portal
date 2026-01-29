@@ -12,58 +12,54 @@ export default function PengurusLoginPage() {
     e.preventDefault();
     setError("");
 
-    try {
-      const res = await fetch("/api/admin/articles/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+    const res = await fetch("/api/admin/articles/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
 
-      const data = await res.json().catch(() => ({}));
+    const data = await res.json();
 
-      if (!res.ok || !data.ok) {
-        setError(data.error || "Login gagal");
-        return;
-      }
-
-      // simpan agar bisa dipakai dashboard
-      sessionStorage.setItem("adminPassword", password);
-
-      // arahkan ke dashboard
-      router.push("/pengurus/dashboard");
-    } catch (err) {
-      setError("Terjadi error saat login.");
+    if (!res.ok || !data.ok) {
+      setError(data.error || "Login gagal");
+      return;
     }
+
+    sessionStorage.setItem("pengurusLogin", "true");
+    router.push("/pengurus/dashboard");
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Login Pengurus</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Masukkan password pengurus.
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-slate-100">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow"
+      >
+        <h1 className="text-xl font-semibold mb-4 text-center">
+          Login Pengurus
+        </h1>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-3">
-          <input
-            type="password"
-            className="w-full rounded-xl border border-slate-200 px-4 py-2"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full rounded-lg border px-4 py-2 mb-3"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-          {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+        {error && (
+          <p className="text-sm text-red-600 mb-3">{error}</p>
+        )}
 
-          <button
-            type="submit"
-            className="w-full rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white"
-          >
-            Masuk
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          className="w-full rounded-lg bg-blue-600 text-white py-2 font-semibold"
+        >
+          Masuk
+        </button>
+      </form>
     </div>
   );
 }
+
 
