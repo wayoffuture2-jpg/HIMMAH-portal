@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../../lib/supabaseClient";
-import Section from "../../../components/Section";
+import Section from "../../components/Section"; // sesuaikan kalau beda
+import { supabase } from "../../lib/supabaseClient"; // sesuaikan kalau beda
 
 export default function LoginPublikPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const [status, setStatus] = useState("idle"); // idle | loading | ready | error
+  const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
 
   const handleLogin = async (e) => {
@@ -24,31 +23,9 @@ export default function LoginPublikPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setStatus("error");
-      setMessage(error.message);
-      return;
-    }
-
-    setStatus("ready");
-    router.replace("/kirim-artikel");
-  };
-
-  const handleForgotPassword = async () => {
-    setStatus("loading");
-    setMessage("");
-
-    if (!email) {
-      setStatus("error");
-      setMessage("Isi email dulu, lalu klik Lupa password.");
-      return;
-    }
-
-    // PENTING: URL ini harus ada di Supabase Auth settings (redirect allowlist)
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset`,
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
     });
 
     if (error) {
@@ -57,8 +34,15 @@ export default function LoginPublikPage() {
       return;
     }
 
+    // Optional: pastikan session ada
+    if (!data?.session) {
+      setStatus("error");
+      setMessage("Login berhasil tapi session tidak terbaca. Coba refresh halaman.");
+      return;
+    }
+
     setStatus("ready");
-    setMessage("Link reset password sudah dikirim ke email. Cek Inbox/Spam.");
+    router.replace("/kirim-artikel");
   };
 
   return (
@@ -71,7 +55,6 @@ export default function LoginPublikPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-
           <input
             type="password"
             className="w-full rounded-xl border border-slate-200 px-4 py-2"
@@ -85,15 +68,6 @@ export default function LoginPublikPage() {
             className="w-full rounded-full bg-blue-600 py-2 font-semibold text-white"
           >
             {status === "loading" ? "Memproses..." : "Masuk"}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            disabled={status === "loading"}
-            className="w-full rounded-full border border-slate-200 py-2 font-semibold text-slate-700"
-          >
-            Lupa password
           </button>
 
           {message ? (
