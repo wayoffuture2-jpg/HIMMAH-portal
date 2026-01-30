@@ -36,7 +36,7 @@ export default function LoginPublikPage() {
     router.refresh();
   };
 
-  const handleForgotPassword = async () => {
+  const handleForgot = async () => {
     setStatus("loading");
     setMessage("");
 
@@ -46,7 +46,10 @@ export default function LoginPublikPage() {
       return;
     }
 
-    const redirectTo = `${window.location.origin}/auth/reset`;
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/auth/reset`
+        : undefined;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 
@@ -57,7 +60,7 @@ export default function LoginPublikPage() {
     }
 
     setStatus("ready");
-    setMessage("Link reset password sudah dikirim ke email. Cek Inbox/Spam.");
+    setMessage("Link reset password sudah dikirim ke email.");
   };
 
   return (
@@ -90,9 +93,16 @@ export default function LoginPublikPage() {
 
           <button
             type="button"
-            onClick={handleForgotPassword}
-            disabled={status === "loading"}
-            className="w-full rounded-full border border-slate-200 py-2 font-semibold text-slate-700"
+            onClick={() => router.push("/auth/register")}
+            className="w-full rounded-full border border-slate-300 py-2 font-semibold"
+          >
+            Daftar Akun Publik
+          </button>
+
+          <button
+            type="button"
+            onClick={handleForgot}
+            className="w-full rounded-full border border-slate-300 py-2 font-semibold"
           >
             Lupa Password
           </button>
