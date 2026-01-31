@@ -5,79 +5,77 @@ import { supabase } from "../../lib/supabaseClient";
 
 export default function SubmitForm() {
   const [authorName, setAuthorName] = useState("");
-  const [kontak, setKontak] = useState("");
+  const [contact, setContact] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [content, setContent] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [message, setMessage] = useState("");
   const [ok, setOk] = useState(false);
 
-  // auto isi kontak dari user login (email)
+  // auto isi contact dari email user login
   useEffect(() => {
     const init = async () => {
       const { data } = await supabase.auth.getUser();
       const email = data?.user?.email || "";
-      if (email && !kontak) setKontak(email);
+      if (email && !contact) setContact(email);
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const submit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMsg("");
+    setMessage("");
     setOk(false);
 
-    if (!authorName || !kontak || !title || !category || !content) {
-      setMsg("Semua field wajib diisi.");
+    if (!authorName || !contact || !title || !category || !content) {
+      setMessage("Semua field wajib diisi.");
       return;
     }
 
     setLoading(true);
-
     try {
-      // pastikan user login
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
 
       if (!user) {
-        setMsg("Kamu belum login. Silakan login dulu.");
+        setMessage("Kamu belum login. Silakan login dulu.");
         return;
       }
 
-      // INSERT ke kolom yang BENAR sesuai tabel Supabase kamu
+      // ✅ insert hanya ke kolom yang kita pakai (versi Inggris)
       const { error } = await supabase.from("articles").insert([
         {
           user_id: user.id,
           author_name: authorName,
-          kontak,
           title,
           content,
           category,
           status: "pending",
+          editor_note: null,
         },
       ]);
 
       if (error) throw error;
 
       setOk(true);
-      setMsg("Artikel berhasil dikirim. Status: pending (menunggu review).");
+      setMessage("✅ Artikel berhasil dikirim. Status: pending (menunggu review).");
 
       // reset form
       setTitle("");
       setCategory("");
       setContent("");
     } catch (err) {
-      setMsg(err?.message || "Gagal mengirim artikel.");
+      setMessage(err?.message || "Gagal mengirim artikel.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="text-sm text-slate-600">Nama</label>
@@ -93,8 +91,8 @@ export default function SubmitForm() {
           <label className="text-sm text-slate-600">Kontak (WA/Email)</label>
           <input
             className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
-            value={kontak}
-            onChange={(e) => setKontak(e.target.value)}
+            value={contact}
+            onChange={(e) => setContact(e.target.value)}
             placeholder="08xx / email"
           />
         </div>
@@ -132,15 +130,16 @@ export default function SubmitForm() {
       </div>
 
       <button
+        type="submit"
         disabled={loading}
-        className="rounded-full bg-blue-600 px-6 py-2 font-semibold text-white"
+        className="rounded-full bg-blue-600 px-6 py-2 font-semibold text-white disabled:opacity-60"
       >
         {loading ? "Mengirim..." : "Kirim Artikel"}
       </button>
 
-      {msg ? (
+      {message ? (
         <p className={`text-sm ${ok ? "text-emerald-600" : "text-rose-600"}`}>
-          {msg}
+          {message}
         </p>
       ) : null}
     </form>
