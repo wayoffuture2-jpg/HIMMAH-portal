@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function SubmitForm() {
-  const [nama, setNama] = useState("");
+  const [authorName, setAuthorName] = useState("");
   const [kontak, setKontak] = useState("");
-  const [judul, setJudul] = useState("");
-  const [kategori, setKategori] = useState("");
-  const [isi, setIsi] = useState("");
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [content, setContent] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
@@ -30,32 +30,33 @@ export default function SubmitForm() {
     setMsg("");
     setOk(false);
 
-    if (!nama || !kontak || !judul || !kategori || !isi) {
+    if (!authorName || !kontak || !title || !category || !content) {
       setMsg("Semua field wajib diisi.");
       return;
     }
 
     setLoading(true);
+
     try {
       // pastikan user login
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
+
       if (!user) {
         setMsg("Kamu belum login. Silakan login dulu.");
         return;
       }
 
-      // ⬇️ Sesuaikan nama kolom dengan table articles kamu
-      // Umumnya: nama, kontak, judul, kategori, isi, status
+      // INSERT ke kolom yang BENAR sesuai tabel Supabase kamu
       const { error } = await supabase.from("articles").insert([
         {
-          nama,
+          user_id: user.id,
+          author_name: authorName,
           kontak,
-          judul,
-          kategori,
-          isi,
+          title,
+          content,
+          category,
           status: "pending",
-          user_id: user.id, // kalau kolom user_id ada (kalau tidak ada, hapus baris ini)
         },
       ]);
 
@@ -65,9 +66,9 @@ export default function SubmitForm() {
       setMsg("Artikel berhasil dikirim. Status: pending (menunggu review).");
 
       // reset form
-      setJudul("");
-      setKategori("");
-      setIsi("");
+      setTitle("");
+      setCategory("");
+      setContent("");
     } catch (err) {
       setMsg(err?.message || "Gagal mengirim artikel.");
     } finally {
@@ -82,8 +83,8 @@ export default function SubmitForm() {
           <label className="text-sm text-slate-600">Nama</label>
           <input
             className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
-            value={nama}
-            onChange={(e) => setNama(e.target.value)}
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
             placeholder="Nama lengkap"
           />
         </div>
@@ -103,8 +104,8 @@ export default function SubmitForm() {
         <label className="text-sm text-slate-600">Judul Artikel</label>
         <input
           className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
-          value={judul}
-          onChange={(e) => setJudul(e.target.value)}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Judul artikel"
         />
       </div>
@@ -113,8 +114,8 @@ export default function SubmitForm() {
         <label className="text-sm text-slate-600">Kategori</label>
         <input
           className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
-          value={kategori}
-          onChange={(e) => setKategori(e.target.value)}
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
           placeholder="Filsafat / Agama / Sains / Politik"
         />
       </div>
@@ -124,8 +125,8 @@ export default function SubmitForm() {
         <textarea
           className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2"
           rows={10}
-          value={isi}
-          onChange={(e) => setIsi(e.target.value)}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
           placeholder="Tulis artikel di sini..."
         />
       </div>
