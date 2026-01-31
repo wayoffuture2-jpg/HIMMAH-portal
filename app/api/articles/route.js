@@ -1,12 +1,16 @@
-import { readArticles, writeArticles, slugify, ensureUniqueSlug } from "../../../lib/articles";
+import { NextResponse } from "next/server";
+import { readArticles, writeArticles, slugify, ensureUniqueSlug } from "@/lib/articles";
+
+export const runtime = "nodejs";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
-  const articles = await readArticles();
-  const filtered = status ? articles.filter((article) => article.status === status) : articles;
 
-  return Response.json({ articles: filtered });
+  const articles = await readArticles();
+  const filtered = status ? articles.filter((a) => a.status === status) : articles;
+
+  return NextResponse.json({ articles: filtered });
 }
 
 export async function POST(request) {
@@ -14,12 +18,12 @@ export async function POST(request) {
   const { authorName, contact, title, category, content } = body;
 
   if (!authorName || !contact || !title || !category || !content) {
-    return Response.json({ message: "Semua field wajib diisi." }, { status: 400 });
+    return NextResponse.json({ message: "Semua field wajib diisi." }, { status: 400 });
   }
 
   const articles = await readArticles();
   const baseSlug = slugify(title);
-  const slug = ensureUniqueSlug(baseSlug, articles.map((article) => article.slug));
+  const slug = ensureUniqueSlug(baseSlug, articles.map((a) => a.slug));
 
   const newArticle = {
     id: `art-${Date.now()}`,
@@ -32,11 +36,11 @@ export async function POST(request) {
     status: "pending",
     editorNote: "",
     createdAt: new Date().toISOString(),
-    publishedAt: null
+    publishedAt: null,
   };
 
   articles.push(newArticle);
   await writeArticles(articles);
 
-  return Response.json({ article: newArticle }, { status: 201 });
+  return NextResponse.json({ article: newArticle }, { status: 201 });
 }
